@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+const affirmations = [
+  "Every day I'm growing stronger, and my heart is healing beautifully.",
+  "I am worthy of love and respect, starting with self-love.",
+  "My past experiences make me wiser, not weaker.",
+  "I choose peace and healing over pain and dwelling.",
+  "Today is a new opportunity to focus on my own happiness.",
+  "I trust in my journey and embrace the healing process.",
+  "My strength grows with each passing day.",
+  "I am creating a beautiful new chapter in my life.",
+  "I release what no longer serves my highest good.",
+  "My heart is healing, and I am becoming stronger."
+];
 import {
   Box,
   Typography,
@@ -25,6 +38,12 @@ function Dashboard() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [error, setError] = useState('');
+  const [currentAffirmation, setCurrentAffirmation] = useState('');
+
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * affirmations.length);
+    setCurrentAffirmation(affirmations[randomIndex]);
+  }, []);
   
   // Calculate Crumble Coins (1 coin per 150 points)
   const crumbleCoins = Math.floor((currentUser?.points || 0) / 150);
@@ -36,7 +55,7 @@ function Dashboard() {
     return Math.min(100, (daysStrong / 30) * 100);
   };
   
-  const progress = calculateProgress();
+  const progress = calculateProgress().toFixed(2);
 
   const breakupMethods = [
     {
@@ -127,6 +146,18 @@ function Dashboard() {
             <Typography variant="body2" color="text.secondary">
               {currentUser?.days_strong || 0} days strong • {progress}% towards your healing goals
             </Typography>
+
+            {/* Daily Affirmation */}
+            <Grid item xs={12}>
+              <Paper sx={{ p: 3, textAlign: 'center' }}>
+                <Typography variant="h6" gutterBottom fontFamily="Oxanium, sans-serif">
+                  Daily Affirmation
+                </Typography>
+                <Typography variant="body1" sx={{ fontStyle: 'italic', color: 'primary.main' }}>
+                  {currentAffirmation}
+                </Typography>
+              </Paper>
+            </Grid>
           </Paper>
         </Grid>
 

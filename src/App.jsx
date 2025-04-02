@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Container } from '@mui/material';
+import { Box, Container, ThemeProvider, CssBaseline } from '@mui/material';
 import Navbar from './components/Navbar';
+import theme from './theme';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -11,7 +12,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: theme.palette.background.default
+      }}>
       <Navbar />
       <Container component="main" sx={{ mt: 4, mb: 4, flex: 1 }}>
         <Routes>
@@ -38,6 +46,7 @@ function App() {
         </Routes>
       </Container>
     </Box>
+    </ThemeProvider>
   );
 }
 

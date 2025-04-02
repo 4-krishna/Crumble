@@ -16,7 +16,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
 const pages = [
-  { title: 'Dashboard', path: '/dashboard' },
   { title: 'Ghost Mode', path: '/ghost-mode' },
   { title: 'Crumble Coins', path: '/crumble-coins' },
   { title: 'Healing', path: '/rewards' },
@@ -127,7 +126,16 @@ function Navbar() {
                 component={RouterLink}
                 to={page.path}
                 onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
+                sx={{
+                  my: 2,
+                  color: 'white',
+                  display: 'block',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    textShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+                  }
+                }}
               >
                 {page.title}
               </Button>
@@ -140,13 +148,28 @@ function Navbar() {
                 <Button
                   component={RouterLink}
                   to="/dashboard"
-                  sx={{ color: 'white' }}
+                  sx={{
+                    color: 'white',
+                    fontWeight: 600,
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      textShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+                    }
+                  }}
                 >
                   Dashboard
                 </Button>
                 <Button
                   onClick={logout}
-                  sx={{ color: 'white', ml: 1 }}
+                  sx={{
+                    color: 'white',
+                    ml: 1,
+                    fontWeight: 600,
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      textShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+                    }
+                  }}
                 >
                   Logout
                 </Button>
