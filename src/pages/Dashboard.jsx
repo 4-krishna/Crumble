@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Box,
@@ -14,15 +15,19 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import TimerIcon from '@mui/icons-material/Timer';
-import StarIcon from '@mui/icons-material/Star';
+import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
+import CallIcon from '@mui/icons-material/Call';
+import MessageIcon from '@mui/icons-material/Message';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 
 function Dashboard() {
-  const { currentUser, generateMessage, updatePoints } = useAuth();
-  const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [error, setError] = useState('');
+  
+  // Calculate Crumble Coins (1 coin per 150 points)
+  const crumbleCoins = Math.floor((currentUser?.points || 0) / 150);
   
   // Calculate progress based on days_strong
   const calculateProgress = () => {
@@ -33,33 +38,39 @@ function Dashboard() {
   
   const progress = calculateProgress();
 
-  useEffect(() => {
-    // Try to generate a message when the dashboard loads
-    if (!message && currentUser) {
-      handleGenerateMessage();
+  const breakupMethods = [
+    {
+      id: 'emoji',
+      title: 'Breakup Through Emoji',
+      description: 'Express your feelings with carefully chosen emojis',
+      icon: <EmojiEmotionsIcon sx={{ fontSize: 40 }} />,
+      emoji: '💔',
+      path: '/breakup/emoji'
+    },
+    {
+      id: 'call',
+      title: 'Breakup Through Call',
+      description: 'Get a script for a phone conversation',
+      icon: <CallIcon sx={{ fontSize: 40 }} />,
+      emoji: '📞',
+      path: '/breakup/call'
+    },
+    {
+      id: 'text',
+      title: 'Breakup Through Text',
+      description: 'Send a well-crafted message',
+      icon: <MessageIcon sx={{ fontSize: 40 }} />,
+      emoji: '💬',
+      path: '/breakup/text'
+    },
+    {
+      id: 'magic',
+      title: 'Magic Recommendation',
+      description: 'Get a personalized breakup guide',
+      icon: <AutoAwesomeIcon sx={{ fontSize: 40 }} />,
+      emoji: '✨',
+      path: '/breakup/quiz'
     }
-  }, [currentUser]);
-
-  const handleGenerateMessage = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const newMessage = await generateMessage();
-      setMessage(newMessage);
-      // Award points for getting a new message
-      await updatePoints(5);
-    } catch (err) {
-      setError(err.message || 'Failed to generate message');
-      console.error('Failed to generate message:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const stats = [
-    { label: 'Days Strong', value: currentUser?.days_strong || '0', icon: <TimerIcon color="primary" /> },
-    { label: 'Points Earned', value: currentUser?.points || '0', icon: <StarIcon color="primary" /> },
-    { label: 'Streak', value: currentUser?.streak || '0', icon: <FavoriteIcon color="primary" /> },
   ];
 
   return (
@@ -75,11 +86,38 @@ function Dashboard() {
       )}
 
       <Grid container spacing={3}>
+        {/* Crumble Coins Card */}
+        <Grid item xs={12}>
+          <Card sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <MonetizationOnIcon sx={{ fontSize: 48, mb: 1 }} />
+              <Typography variant="h4" gutterBottom>
+                {crumbleCoins}
+              </Typography>
+              <Typography variant="h6">
+                Crumble Coins™
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                {currentUser?.points || 0} points total
+              </Typography>
+            </CardContent>
+            <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => navigate('/rewards')}
+              >
+                View Rewards
+              </Button>
+            </CardActions>
+          </Card>
+        </Grid>
+
         {/* Progress Section */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 3, mb: 3 }}>
+          <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Progress
+              Healing Progress
             </Typography>
             <LinearProgress
               variant="determinate"
@@ -87,68 +125,57 @@ function Dashboard() {
               sx={{ height: 10, borderRadius: 5, mb: 2 }}
             />
             <Typography variant="body2" color="text.secondary">
-              {progress}% towards your healing goals
+              {currentUser?.days_strong || 0} days strong • {progress}% towards your healing goals
             </Typography>
           </Paper>
         </Grid>
 
-        {/* Stats Cards */}
-        {stats.map((stat) => (
-          <Grid item xs={12} sm={4} key={stat.label}>
-            <Card>
-              <CardContent sx={{ textAlign: 'center' }}>
-                {stat.icon}
-                <Typography variant="h4" sx={{ my: 1 }}>
-                  {stat.value}
+        {/* Breakup Methods */}
+        <Grid item xs={12}>
+          <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
+            Breakup Methods
+          </Typography>
+        </Grid>
+
+        {breakupMethods.map((method) => (
+          <Grid item xs={12} sm={6} md={3} key={method.id}>
+            <Card
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                },
+              }}
+            >
+              <CardContent sx={{ flexGrow: 1, textAlign: 'center' }}>
+                <Typography
+                  variant="h2"
+                  component="div"
+                  sx={{ mb: 2 }}
+                >
+                  {method.emoji}
                 </Typography>
-                <Typography color="text.secondary">{stat.label}</Typography>
+                <Typography variant="h6" component="div" gutterBottom>
+                  {method.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {method.description}
+                </Typography>
               </CardContent>
+              <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate(method.path)}
+                >
+                  Get Started
+                </Button>
+              </CardActions>
             </Card>
           </Grid>
         ))}
-
-        {/* Message Generator */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3, mt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Daily Affirmation
-            </Typography>
-            <Box sx={{ my: 2 }}>
-              {isLoading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                  <CircularProgress />
-                </Box>
-              ) : message ? (
-                <Typography
-                  variant="h5"
-                  sx={{
-                    p: 3,
-                    textAlign: 'center',
-                    fontStyle: 'italic',
-                    color: 'primary.main',
-                  }}
-                >
-                  {message}
-                </Typography>
-              ) : (
-                <Typography color="text.secondary" textAlign="center">
-                  Click the button below to receive your daily affirmation
-                </Typography>
-              )}
-            </Box>
-            <Box sx={{ textAlign: 'center' }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleGenerateMessage}
-                disabled={isLoading}
-                size="large"
-              >
-                {isLoading ? 'Generating...' : 'Generate Message'}
-              </Button>
-            </Box>
-          </Paper>
-        </Grid>
 
         {/* Recent Achievements */}
         <Grid item xs={12}>
@@ -157,21 +184,27 @@ function Dashboard() {
               Recent Achievements
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip
-                label="First Week Complete"
-                color="primary"
-                variant="outlined"
-              />
-              <Chip
-                label="Shared Your Story"
-                color="primary"
-                variant="outlined"
-              />
-              <Chip
-                label="Self-Care Champion"
-                color="primary"
-                variant="outlined"
-              />
+              {currentUser?.days_strong >= 7 && (
+                <Chip
+                  label="First Week Complete"
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
+              {currentUser?.points >= 100 && (
+                <Chip
+                  label="Point Collector"
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
+              {crumbleCoins >= 1 && (
+                <Chip
+                  label="First Crumble Coin"
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
             </Box>
           </Paper>
         </Grid>

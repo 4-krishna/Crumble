@@ -16,9 +16,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
 const pages = [
-  { title: 'Home', path: '/' },
+  { title: 'Dashboard', path: '/dashboard' },
   { title: 'Ghost Mode', path: '/ghost-mode' },
-  { title: 'Rewards', path: '/rewards' },
+  { title: 'Crumble Coins', path: '/crumble-coins' },
+  { title: 'Healing', path: '/rewards' },
 ];
 
 const authPages = [
