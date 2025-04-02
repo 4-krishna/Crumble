@@ -19,6 +19,7 @@ const pages = [
   { title: 'Ghost Mode', path: '/ghost-mode' },
   { title: 'Crumble Coins', path: '/crumble-coins' },
   { title: 'Healing', path: '/rewards' },
+  { title: 'Subscription', path: '/subscription' },
 ];
 
 const authPages = [
@@ -128,12 +129,12 @@ function Navbar() {
                 onClick={handleCloseNavMenu}
                 sx={{
                   my: 2,
-                  color: 'white',
+                  color: '#2B6CB0',
                   display: 'block',
                   fontWeight: 600,
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    textShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+                    backgroundColor: 'rgba(43, 108, 176, 0.1)',
+                    textShadow: '0 0 8px rgba(43, 108, 176, 0.3)'
                   }
                 }}
               >
@@ -147,13 +148,31 @@ function Navbar() {
               <>
                 <Button
                   component={RouterLink}
-                  to="/dashboard"
+                  to="/subscription"
+                  variant="outlined"
                   sx={{
                     color: 'white',
+                    borderColor: 'white',
+                    mr: 2,
                     fontWeight: 600,
                     '&:hover': {
+                      borderColor: 'white',
                       backgroundColor: 'rgba(255, 255, 255, 0.1)',
                       textShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+                    }
+                  }}
+                >
+                  Upgrade to Pro
+                </Button>
+                <Button
+                  component={RouterLink}
+                  to="/dashboard"
+                  sx={{
+                    color: '#2B6CB0',
+                    fontWeight: 600,
+                    '&:hover': {
+                      backgroundColor: 'rgba(43, 108, 176, 0.1)',
+                      textShadow: '0 0 8px rgba(43, 108, 176, 0.3)'
                     }
                   }}
                 >
@@ -162,12 +181,12 @@ function Navbar() {
                 <Button
                   onClick={logout}
                   sx={{
-                    color: 'white',
+                    color: '#2B6CB0',
                     ml: 1,
                     fontWeight: 600,
                     '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      textShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+                      backgroundColor: 'rgba(43, 108, 176, 0.1)',
+                      textShadow: '0 0 8px rgba(43, 108, 176, 0.3)'
                     }
                   }}
                 >

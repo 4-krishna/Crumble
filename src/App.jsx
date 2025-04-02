@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import GhostMode from './pages/GhostMode';
 import Rewards from './pages/Rewards';
+import Subscription from './pages/Subscription';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -42,7 +43,11 @@ function App() {
               <Rewards />
             </ProtectedRoute>
           } />
-
+          <Route path="/subscription" element={
+            <ProtectedRoute>
+              <Subscription />
+            </ProtectedRoute>
+          } />
         </Routes>
       </Container>
     </Box>
