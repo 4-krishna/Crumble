@@ -10,6 +10,7 @@ import GhostMode from './pages/GhostMode';
 import Rewards from './pages/Rewards';
 import Subscription from './pages/Subscription';
 import ProtectedRoute from './components/ProtectedRoute';
+import { EmojiBreakup, CallBreakup, TextBreakup, MagicQuiz } from './pages/breakup';
 
 function App() {
   return (
@@ -46,6 +47,26 @@ function App() {
           <Route path="/subscription" element={
             <ProtectedRoute>
               <Subscription />
+            </ProtectedRoute>
+          } />
+          <Route path="/breakup/emoji" element={
+            <ProtectedRoute>
+              <EmojiBreakup />
+            </ProtectedRoute>
+          } />
+          <Route path="/breakup/call" element={
+            <ProtectedRoute>
+              <CallBreakup />
+            </ProtectedRoute>
+          } />
+          <Route path="/breakup/text" element={
+            <ProtectedRoute>
+              <TextBreakup />
+            </ProtectedRoute>
+          } />
+          <Route path="/breakup/quiz" element={
+            <ProtectedRoute>
+              <MagicQuiz />
             </ProtectedRoute>
           } />
         </Routes>

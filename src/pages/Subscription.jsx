@@ -27,7 +27,9 @@ const tiers = [
     price: '9.99',
     description: [
       'All Free features',
-      'Unlimited Breakup Methods',
+      'Premium Breakup Methods',
+      'Advanced Call Scripts',
+      'Custom Message Templates',
       'Priority Support',
       'Ghost Mode Pro',
       'Advanced Analytics',
@@ -40,8 +42,10 @@ const tiers = [
     price: '19.99',
     description: [
       'All Pro features',
+      'AI Chatbot Assistant',
+      'Call Script Assistance',
+      'Song Suggestions',
       'Personalized Coaching',
-      'Exclusive Content',
       'VIP Support',
       'Early Access to Features',
     ],

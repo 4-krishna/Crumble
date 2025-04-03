@@ -1,19 +1,23 @@
 import sqlite3
-from flask import Flask, request, jsonify, send_file
+import os
+from flask import Flask, request, jsonify, send_file, send_from_directory, Response
+from flask.typing import ResponseReturnValue
+from typing import Union
 from flask_cors import CORS
 import jwt
 import datetime
+import os
 from werkzeug.security import check_password_hash, generate_password_hash
 import database as db
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='public', static_url_path='')
 CORS(app)
 
 SECRET_KEY = 'your-secret-key'  # In production, use a secure key
 
 # Routes
 @app.route('/api/register', methods=['POST'])
-def register():
+def register() -> ResponseReturnValue:
     data = request.get_json()
     
     if not data or not data.get('email') or not data.get('password') or not data.get('username'):
@@ -31,7 +35,7 @@ def register():
     return jsonify({'message': 'User registered successfully'}), 201
 
 @app.route('/api/login', methods=['POST'])
-def login():
+def login() -> ResponseReturnValue:
     data = request.get_json()
     
     if not data or not data.get('email') or not data.get('password'):
@@ -62,7 +66,7 @@ def login():
     })
 
 @app.route('/api/messages/generate', methods=['GET'])
-def generate_message():
+def generate_message() -> ResponseReturnValue:
     messages = [
         'Remember, every ending is a new beginning.',
         'You are stronger than you know.',
@@ -81,7 +85,7 @@ def generate_message():
     
     return jsonify({'message': message})
 
-def verify_token():
+def verify_token() -> dict | None:
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
         return None
@@ -95,7 +99,7 @@ def verify_token():
         return None
 
 @app.route('/api/user/update-points', methods=['POST'])
-def update_points():
+def update_points() -> ResponseReturnValue:
     token_data = verify_token()
     if not token_data:
         return jsonify({'message': 'Invalid or expired token'}), 401
@@ -124,7 +128,7 @@ def update_points():
     })
 
 @app.route('/api/user/ghost-mode/settings', methods=['GET', 'POST'])
-def ghost_mode_settings():
+def ghost_mode_settings() -> ResponseReturnValue:
     token_data = verify_token()
     if not token_data:
         return jsonify({'message': 'Invalid or expired token'}), 401
@@ -157,33 +161,33 @@ def ghost_mode_settings():
             'hideActivity': bool(settings.get('hide_activity', False))
         })
     
-    elif request.method == 'POST':
-        data = request.get_json()
-        if not data or 'settings' not in data:
-            return jsonify({'message': 'Missing settings data'}), 400
+    # POST method
+    data = request.get_json()
+    if not data or 'settings' not in data:
+        return jsonify({'message': 'Missing settings data'}), 400
+    
+    settings = data['settings']
+    if not isinstance(settings, dict):
+        return jsonify({'message': 'Invalid settings format'}), 400
         
-        settings = data['settings']
-        if not isinstance(settings, dict):
-            return jsonify({'message': 'Invalid settings format'}), 400
-            
-        # Validate settings fields
-        required_fields = ['blockMessages', 'hideStatus', 'muteNotifications', 'hideActivity']
-        for field in required_fields:
-            if field not in settings:
-                return jsonify({'message': f'Missing required field: {field}'}), 400
-            if not isinstance(settings[field], bool):
-                return jsonify({'message': f'Invalid value for {field}: must be boolean'}), 400
-        
-        if not db.update_ghost_mode_settings(user_id, settings):
-            return jsonify({'message': 'Failed to update ghost mode settings'}), 500
-        
-        return jsonify({
-            'message': 'Ghost mode settings updated successfully',
-            'settings': settings
-        })
+    # Validate settings fields
+    required_fields = ['blockMessages', 'hideStatus', 'muteNotifications', 'hideActivity']
+    for field in required_fields:
+        if field not in settings:
+            return jsonify({'message': f'Missing required field: {field}'}), 400
+        if not isinstance(settings[field], bool):
+            return jsonify({'message': f'Invalid value for {field}: must be boolean'}), 400
+    
+    if not db.update_ghost_mode_settings(user_id, settings):
+        return jsonify({'message': 'Failed to update ghost mode settings'}), 500
+    
+    return jsonify({
+        'message': 'Ghost mode settings updated successfully',
+        'settings': settings
+    })
 
 @app.route('/api/user/ghost-mode/days', methods=['GET'])
-def get_ghost_mode_days():
+def get_ghost_mode_days() -> ResponseReturnValue:
     token_data = verify_token()
     if not token_data:
         return jsonify({'message': 'Invalid or expired token'}), 401
@@ -195,48 +199,93 @@ def get_ghost_mode_days():
         return jsonify({'message': 'Failed to get ghost mode days'}), 500
     
     return jsonify({'days': ghost_mode_days})
-def manage_social_platforms():
+
+@app.route('/api/breakup-messages/<message_type>', methods=['GET'])
+def get_breakup_messages(message_type) -> ResponseReturnValue:
+    import csv
+    import os
+    
+    if message_type not in ['emoji', 'call', 'text']:
+        return jsonify({'message': 'Invalid message type'}), 400
+    
+    # Use absolute path for assets directory
+    assets_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets')
+    csv_file = os.path.join(assets_dir, f'breakup_{message_type}.csv')
+    
+    try:
+        messages = []
+        with open(csv_file, 'r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                # Handle both single-column and multi-column CSV files
+                content = row.get('content') or row.get('message') or list(row.values())[0]
+                tone = row.get('tone', 'classic')
+                message = {
+                    'content': content,
+                    'tone': tone
+                }
+                messages.append(message)
+        return jsonify(messages)
+    except FileNotFoundError:
+        return jsonify({'message': f'Failed to load {message_type} breakup messages'}), 404
+    except Exception as e:
+        app.logger.error(f'Error loading breakup messages: {str(e)}')
+        return jsonify({'message': 'Error loading messages'}), 500
+
+@app.route('/api/user/social-platforms', methods=['GET', 'POST', 'DELETE'])
+def manage_social_platforms() -> ResponseReturnValue:
     token_data = verify_token()
     if not token_data:
         return jsonify({'message': 'Invalid or expired token'}), 401
     
     user_id = token_data['user_id']
     
-    if request.method == 'GET':
-        platforms = db.get_user_social_platforms(user_id)
-        if platforms is None:
-            return jsonify({'message': 'Failed to get social platforms'}), 500
-        return jsonify(platforms)
-    
-    elif request.method == 'POST':
-        data = request.get_json()
-        if not data or 'platform' not in data:
-            return jsonify({'message': 'Missing platform data'}), 400
+    try:
+        if request.method == 'GET':
+            platforms = db.get_user_social_platforms(user_id)
+            if platforms is None:
+                return jsonify({'message': 'Failed to get social platforms'}), 500
+            return jsonify(platforms)
         
-        platform = data['platform']
-        if not platform.get('name'):
-            return jsonify({'message': 'Platform name is required'}), 400
+        if request.method == 'POST':
+            data = request.get_json()
+            if not data or 'platform' not in data:
+                return jsonify({'message': 'Missing platform data'}), 400
+            
+            platform = data['platform']
+            if not platform.get('name'):
+                return jsonify({'message': 'Platform name is required'}), 400
+            
+            if not isinstance(platform.get('username', ''), str):
+                return jsonify({'message': 'Username must be a string'}), 400
+            
+            result = db.add_social_platform(user_id, platform['name'], platform.get('username', ''))
+            if not result:
+                return jsonify({'message': 'Failed to connect platform'}), 500
+            
+            return jsonify({
+                'message': 'Platform connected successfully',
+                'platform': platform
+            })
         
-        result = db.add_social_platform(user_id, platform['name'], platform.get('username', ''))
-        if not result:
-            return jsonify({'message': 'Failed to connect platform'}), 500
-        
-        return jsonify({
-            'message': 'Platform connected successfully',
-            'platform': platform
-        })
-    
-    elif request.method == 'DELETE':
+        # DELETE method
         data = request.get_json()
         if not data or 'platform_name' not in data:
             return jsonify({'message': 'Missing platform name'}), 400
         
+        if not isinstance(data['platform_name'], str):
+            return jsonify({'message': 'Platform name must be a string'}), 400
+        
         if db.remove_social_platform(user_id, data['platform_name']):
             return jsonify({'message': 'Platform disconnected successfully'})
         return jsonify({'message': 'Failed to disconnect platform'}), 500
+    
+    except Exception as e:
+        app.logger.error(f'Error managing social platforms: {str(e)}')
+        return jsonify({'message': 'Internal server error'}), 500
         
 @app.route('/api/user/rewards', methods=['GET'])
-def get_rewards():
+def get_rewards() -> ResponseReturnValue:
     token_data = verify_token()
     if not token_data:
         return jsonify({'message': 'Invalid or expired token'}), 401
@@ -291,7 +340,7 @@ def get_rewards():
     return jsonify(rewards)
 
 @app.route('/api/user/rewards/claim', methods=['POST'])
-def claim_reward():
+def claim_reward() -> ResponseReturnValue:
     token_data = verify_token()
     if not token_data:
         return jsonify({'message': 'Invalid or expired token'}), 401
@@ -338,7 +387,7 @@ def claim_reward():
     return jsonify({'message': 'Failed to claim reward'}), 500
 
 @app.route('/api/user/achievements', methods=['GET'])
-def get_achievements():
+def get_achievements() -> ResponseReturnValue:
     token_data = verify_token()
     if not token_data:
         return jsonify({'message': 'Invalid or expired token'}), 401
@@ -383,7 +432,7 @@ def get_achievements():
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
-def serve_frontend(path):
+def serve_frontend(path) -> ResponseReturnValue:
     try:
         # First try to serve static files from public directory
         if path and os.path.exists(os.path.join('public', path)):

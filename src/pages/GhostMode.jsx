@@ -20,6 +20,10 @@ import {
   CircularProgress,
 } from '@mui/material';
 import SecurityIcon from '@mui/icons-material/Security';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'; // For Snapchat
 
 function GhostMode() {
   const { currentUser, getGhostModeSettings, updateGhostModeSettings, getSocialPlatforms, connectSocialPlatform, disconnectSocialPlatform } = useAuth();
@@ -49,9 +53,10 @@ function GhostMode() {
         
         const platformsData = await getSocialPlatforms();
         setPlatforms(platformsData.length > 0 ? platformsData : [
-          { name: 'Instagram', connected: false },
-          { name: 'Facebook', connected: false },
-          { name: 'Twitter', connected: false },
+          { name: 'Instagram', connected: false, icon: InstagramIcon, color: '#E4405F' },
+          { name: 'WhatsApp', connected: false, icon: WhatsAppIcon, color: '#25D366' },
+          { name: 'Snapchat', connected: false, icon: PhotoCameraIcon, color: '#FFFC00' },
+          { name: 'LinkedIn', connected: false, icon: LinkedInIcon, color: '#0A66C2' },
         ]);
       } catch (err) {
         setError(err.message || 'Failed to load ghost mode data');
@@ -210,17 +215,47 @@ function GhostMode() {
             <List>
               {platforms.map((platform) => (
                 <ListItem key={platform.name}>
-                  <ListItemText
-                    primary={platform.name}
-                    secondary={platform.connected ? `Connected as ${platform.username || ''}` : 'Not connected'}
-                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                    {platform.icon && (
+                      <platform.icon
+                        sx={{
+                          mr: 2,
+                          color: platform.connected ? platform.color : 'text.disabled',
+                          fontSize: '28px'
+                        }}
+                      />
+                    )}
+                    <ListItemText
+                      primary={platform.name}
+                      secondary={
+                        platform.connected
+                          ? `Connected as ${platform.username || ''}`
+                          : 'Not connected'
+                      }
+                      sx={{
+                        '& .MuiListItemText-primary': {
+                          fontWeight: platform.connected ? 600 : 400
+                        },
+                        '& .MuiListItemText-secondary': {
+                          color: platform.connected ? 'success.main' : 'text.secondary'
+                        }
+                      }}
+                    />
+                  </Box>
                   <ListItemSecondaryAction>
                     <Button
-                      variant="outlined"
+                      variant={platform.connected ? 'outlined' : 'contained'}
                       color={platform.connected ? 'error' : 'primary'}
-                      onClick={() => platform.connected 
-                        ? handleDisconnectPlatform(platform.name) 
-                        : handleConnectPlatform(platform.name)}
+                      size="small"
+                      onClick={() =>
+                        platform.connected
+                          ? handleDisconnectPlatform(platform.name)
+                          : handleConnectPlatform(platform.name)
+                      }
+                      sx={{
+                        minWidth: '100px',
+                        borderRadius: '20px'
+                      }}
                     >
                       {platform.connected ? 'Disconnect' : 'Connect'}
                     </Button>

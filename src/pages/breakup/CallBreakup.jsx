@@ -12,6 +12,10 @@ import {
   Paper,
   Alert,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useAuth } from '../../context/AuthContext';
@@ -23,6 +27,7 @@ function CallBreakup() {
   const [error, setError] = useState('');
   const [selectedTone, setSelectedTone] = useState('classic');
   const [copied, setCopied] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   useEffect(() => {
     fetchCallScripts();
@@ -55,11 +60,25 @@ function CallBreakup() {
   };
 
   const tones = [
-    { value: 'classic', label: 'Classic' },
-    { value: 'gentle', label: 'Gentle' },
-    { value: 'blunt', label: 'Blunt' },
-    { value: 'humorous', label: 'Humorous' },
+    { value: 'classic', label: 'Classic', premium: false },
+    { value: 'gentle', label: 'Gentle', premium: true },
+    { value: 'blunt', label: 'Blunt', premium: true },
+    { value: 'humorous', label: 'Humorous', premium: true },
   ];
+
+  const handleToneChange = (newValue) => {
+    const selectedToneObj = tones.find(tone => tone.value === newValue);
+    if (selectedToneObj?.premium && !currentUser?.isPremium) {
+      setShowUpgradeDialog(true);
+      return;
+    }
+    setSelectedTone(newValue);
+    setError('');
+  };
+
+  const handleUpgrade = () => {
+    window.location.href = '/subscription';
+  };
 
   if (loading) {
     return (
@@ -86,23 +105,74 @@ function CallBreakup() {
         </Alert>
       )}
 
-      <Paper sx={{ mb: 4 }}>
-        <Tabs
-          value={selectedTone}
-          onChange={(e, newValue) => setSelectedTone(newValue)}
-          variant="fullWidth"
-          indicatorColor="primary"
-          textColor="primary"
-        >
-          {tones.map((tone) => (
-            <Tab
-              key={tone.value}
-              value={tone.value}
-              label={tone.label}
-            />
-          ))}
-        </Tabs>
-      </Paper>
+      {!currentUser?.isPremium ? (
+        <Card sx={{ mb: 4, backgroundColor: 'background.paper' }}>
+          <CardContent>
+            <Typography variant="h5" gutterBottom color="primary">
+              🌟 Unlock Premium Call Scripts
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Upgrade to access our complete collection of specialized breakup call scripts:
+            </Typography>
+            <Grid container spacing={2}>
+              {tones.filter(tone => tone.premium).map((tone) => (
+                <Grid item xs={12} sm={4} key={tone.value}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      textAlign: 'center',
+                      backgroundColor: 'action.hover',
+                      borderRadius: 2
+                    }}
+                  >
+                    <Typography variant="h6" gutterBottom>
+                      {tone.label} Style
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {tone.value === 'gentle' && 'Perfect for sensitive situations'}
+                      {tone.value === 'blunt' && 'Direct and straightforward approach'}
+                      {tone.value === 'humorous' && 'Lighthearted way to ease tension'}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={handleUpgrade}
+                sx={{
+                  background: (theme) =>
+                    `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                }}
+              >
+                Upgrade to Premium
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      ) : (
+        <Paper sx={{ mb: 4 }}>
+          <Tabs
+            value={selectedTone}
+            onChange={(e, newValue) => handleToneChange(newValue)}
+            variant="fullWidth"
+            indicatorColor="primary"
+            textColor="primary"
+          >
+            {tones.map((tone) => (
+              <Tab
+                key={tone.value}
+                value={tone.value}
+                label={`${tone.label}${tone.premium ? ' 🌟' : ''}`}
+              />
+            ))}
+          </Tabs>
+        </Paper>
+      )}
 
       <Grid container spacing={3}>
         {filteredMessages.map((script, index) => (
@@ -147,6 +217,28 @@ function CallBreakup() {
           </Grid>
         ))}
       </Grid>
+      <Dialog open={showUpgradeDialog} onClose={() => setShowUpgradeDialog(false)}>
+        <DialogTitle>Upgrade to Premium</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Get access to our full collection of breakup call scripts, including:
+          </Typography>
+          <Typography component="ul" sx={{ pl: 2 }}>
+            <li>Gentle and empathetic approaches</li>
+            <li>Direct and honest conversations</li>
+            <li>Lighthearted and humorous scripts</li>
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 2 }}>
+            Upgrade now to unlock all premium features and make your breakup conversation easier.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowUpgradeDialog(false)}>Not Now</Button>
+          <Button variant="contained" color="primary" onClick={handleUpgrade}>
+            Upgrade to Premium
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

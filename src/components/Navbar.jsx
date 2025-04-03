@@ -17,7 +17,6 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 
 const pages = [
   { title: 'Ghost Mode', path: '/ghost-mode' },
-  { title: 'Crumble Coins', path: '/crumble-coins' },
   { title: 'Healing', path: '/rewards' },
   { title: 'Subscription', path: '/subscription' },
 ];
