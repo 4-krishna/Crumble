@@ -477,7 +477,7 @@ def get_recent_achievements() -> ResponseReturnValue:
     
     achievement_map = {ach['id']: ach for ach in all_achievements}
     
-    # Combine completion dates with achievement details
+    # Combine completion dates with achievement details and sort by completion date
     recent_achievements = []
     for completed in completed_achievements:
         achievement = achievement_map.get(completed['achievement_id'])
@@ -487,7 +487,41 @@ def get_recent_achievements() -> ResponseReturnValue:
                 'completed_at': completed['completed_at']
             })
     
+    # Sort achievements by completion date, most recent first
+    recent_achievements.sort(key=lambda x: x['completed_at'], reverse=True)
+    
     return jsonify(recent_achievements)
+
+@app.route('/api/quiz/magic', methods=['GET'])
+def get_magic_quiz() -> ResponseReturnValue:
+    try:
+        import csv
+        
+        # Use absolute path for assets directory
+        assets_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets')
+        csv_file = os.path.join(assets_dir, 'magic_quiz.csv')
+        
+        questions = []
+        with open(csv_file, 'r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                question = {
+                    'question': row['Question'],
+                    'options': [
+                        row['Option1'],
+                        row['Option2'],
+                        row['Option3'],
+                        row['Option4']
+                    ]
+                }
+                questions.append(question)
+        
+        return jsonify(questions)
+    except FileNotFoundError:
+        return jsonify({'message': 'Quiz questions not found'}), 404
+    except Exception as e:
+        app.logger.error(f'Error loading quiz questions: {str(e)}')
+        return jsonify({'message': 'Error loading quiz questions'}), 500
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
