@@ -659,18 +659,55 @@ def get_ghost_mode_days(user_id):
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-            SELECT COUNT(DISTINCT DATE(created_at)) as days
-            FROM ghost_mode_settings
-            WHERE user_id = ? AND 
-                  (block_messages = 1 OR hide_status = 1 OR 
-                   mute_notifications = 1 OR hide_activity = 1)
+                SELECT COUNT(DISTINCT date(timestamp)) as days
+                FROM ghost_mode_logs
+                WHERE user_id = ?
             ''', (user_id,))
-            
             result = cursor.fetchone()
             return result['days'] if result else 0
+    except sqlite3.Error:
+        return 0
+
+def get_user_achievements(user_id):
+    """Get user's achievements with completion dates"""
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            # Create achievements table if it doesn't exist
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_achievements (
+                    user_id INTEGER,
+                    achievement_id INTEGER,
+                    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (user_id, achievement_id)
+                )
+            ''')
+            
+            # Get completed achievements
+            cursor.execute('''
+                SELECT achievement_id, completed_at
+                FROM user_achievements
+                WHERE user_id = ?
+                ORDER BY completed_at DESC
+            ''', (user_id,))
+            return [dict(row) for row in cursor.fetchall()]
     except sqlite3.Error as e:
         print(f"Database error: {str(e)}")
-        return 0
+        return []
+
+def save_achievement(user_id, achievement_id):
+    """Save a completed achievement"""
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT OR IGNORE INTO user_achievements (user_id, achievement_id)
+                VALUES (?, ?)
+            ''', (user_id, achievement_id))
+            return True
+    except sqlite3.Error as e:
+        print(f"Database error: {str(e)}")
+        return False
 
 def get_user_claimed_rewards(user_id):
     """Get all rewards claimed by a user"""

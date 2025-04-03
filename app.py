@@ -403,6 +403,10 @@ def get_achievements() -> ResponseReturnValue:
     user_days_strong = user.get('days_strong', 0)
     ghost_mode_days = db.get_ghost_mode_days(user_id)
     
+    # Get completed achievements with dates
+    completed_achievements = db.get_user_achievements(user_id)
+    completed_ids = {ach['achievement_id']: ach['completed_at'] for ach in completed_achievements}
+    
     # Define achievements and check if they're completed
     achievements = [
         {
@@ -410,25 +414,80 @@ def get_achievements() -> ResponseReturnValue:
             'title': '7-Day Streak',
             'description': 'Logged in for 7 consecutive days',
             'points': 50,
-            'completed': user_streak >= 7
+            'completed': user_streak >= 7,
+            'completed_at': completed_ids.get(1)
         },
         {
             'id': 2,
             'title': '30-Day Journey',
             'description': 'Reached 30 days in your healing journey',
             'points': 100,
-            'completed': user_days_strong >= 30
+            'completed': user_days_strong >= 30,
+            'completed_at': completed_ids.get(2)
         },
         {
             'id': 3,
             'title': 'Ghost Mode Master',
             'description': 'Used Ghost Mode features for 30 days',
             'points': 150,
-            'completed': ghost_mode_days >= 30
+            'completed': ghost_mode_days >= 30,
+            'completed_at': completed_ids.get(3)
         },
     ]
     
+    # Check for newly completed achievements and save them
+    for achievement in achievements:
+        if achievement['completed'] and not achievement['completed_at']:
+            db.save_achievement(user_id, achievement['id'])
+            # Update points
+            db.update_user_points(user_id, achievement['points'])
+    
     return jsonify(achievements)
+
+@app.route('/api/user/recent-achievements', methods=['GET'])
+def get_recent_achievements() -> ResponseReturnValue:
+    token_data = verify_token()
+    if not token_data:
+        return jsonify({'message': 'Invalid or expired token'}), 401
+    
+    user_id = token_data['user_id']
+    completed_achievements = db.get_user_achievements(user_id)
+    
+    # Get all achievements to map IDs to full achievement data
+    all_achievements = [
+        {
+            'id': 1,
+            'title': '7-Day Streak',
+            'description': 'Logged in for 7 consecutive days',
+            'points': 50
+        },
+        {
+            'id': 2,
+            'title': '30-Day Journey',
+            'description': 'Reached 30 days in your healing journey',
+            'points': 100
+        },
+        {
+            'id': 3,
+            'title': 'Ghost Mode Master',
+            'description': 'Used Ghost Mode features for 30 days',
+            'points': 150
+        },
+    ]
+    
+    achievement_map = {ach['id']: ach for ach in all_achievements}
+    
+    # Combine completion dates with achievement details
+    recent_achievements = []
+    for completed in completed_achievements:
+        achievement = achievement_map.get(completed['achievement_id'])
+        if achievement:
+            recent_achievements.append({
+                **achievement,
+                'completed_at': completed['completed_at']
+            })
+    
+    return jsonify(recent_achievements)
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
