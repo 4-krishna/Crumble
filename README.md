@@ -1,4 +1,4 @@
-# 🌊 Crumble - The Breakup Assistant
+# Crumble - The Breakup Assistant
 
 Crumble is a lighthearted web application designed to help you navigate the tricky waters of ending relationships. With a touch of humor and empathy, we're here to make breakups a little less painful!
 
